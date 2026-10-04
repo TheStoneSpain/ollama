@@ -12,6 +12,7 @@ import { useCloudStatus } from "@/hooks/useCloudStatus";
 import { useQueryClient } from "@tanstack/react-query";
 import { getModelUpstreamInfo } from "@/api";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { HuggingFacePull } from "@/components/HuggingFacePull";
 
 const stalenessCheckCache = new Map<string, number>();
 
@@ -204,6 +205,13 @@ export const ModelPicker = forwardRef<
             onModelSelect={handleModelSelect}
             cloudDisabled={cloudDisabled}
             isOpen={isOpen}
+          />
+          <HuggingFacePull
+            onPulled={(model) => {
+              setSettings({ SelectedModel: model });
+              setIsOpen(false);
+              onModelSelect?.();
+            }}
           />
         </div>
       )}

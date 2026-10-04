@@ -524,17 +524,23 @@ export async function* pullModel(
   completed?: number;
   done?: boolean;
 }> {
-  const response = await fetch(`${API_BASE}/api/v1/models/pull`, {
+  const response = await fetch(`${API_BASE}/api/pull`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name: modelName }),
+    body: JSON.stringify({ model: modelName, stream: true }),
     signal,
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to pull model: ${response.statusText}`);
+    let detail = response.statusText;
+    try {
+      detail = (await response.json()).error || detail;
+    } catch {
+      // body was not JSON; keep the status text
+    }
+    throw new Error(`Failed to pull model: ${detail}`);
   }
 
   for await (const event of parseJsonlFromResponse<{
@@ -543,7 +549,11 @@ export async function* pullModel(
     total?: number;
     completed?: number;
     done?: boolean;
+    error?: string;
   }>(response)) {
+    if (event.error) {
+      throw new Error(event.error);
+    }
     yield event;
   }
 }
